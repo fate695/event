@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class BigEventApplication {
 
     public static void main(String[] args) {
+        //测试git
         SpringApplication.run(BigEventApplication.class, args);
     }
 
