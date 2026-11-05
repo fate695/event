@@ -1,12 +1,17 @@
 package com.southwind.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.southwind.pojo.User;
+import com.southwind.pojo.dto.PasswordUpdateDTO;
 import com.southwind.service.UserService;
 import com.southwind.mapper.UserMapper;
 import com.southwind.utils.Md5Util;
+import com.southwind.utils.ThreadLocalUtil;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 /**
 * @author lpj
@@ -36,6 +41,38 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
                 new LambdaQueryWrapper<User>()
                         .eq(User::getUsername, username)
         );
+    }
+
+    @Override
+    public void updateAvatar(String avatarUrl) {
+        // 从令牌中获取当前登录用户 id
+        Map<String, Object> claims = ThreadLocalUtil.get();
+        Integer id = (Integer) claims.get("id");
+        // MP自带update方法 + LambdaUpdateWrapper，只更新user_pic字段
+        update(new LambdaUpdateWrapper<User>()
+                .eq(User::getId, id)
+                .set(User::getUserPic, avatarUrl));
+    }
+
+    @Override
+    public void updatePwd(PasswordUpdateDTO dto) {
+        // 校验两次新密码是否一致
+        if (!dto.getNewPwd().equals(dto.getRePwd())) {
+            throw new IllegalArgumentException("两次输入的新密码不一致");
+        }
+        // 从令牌中获取当前登录用户 id，并查询用户
+        Map<String, Object> claims = ThreadLocalUtil.get();
+        Integer id = (Integer) claims.get("id");
+        User user = getById(id);
+        // 校验原密码是否正确
+        if (user == null || !Md5Util.checkPassword(dto.getOldPwd(), user.getPassword())) {
+            throw new IllegalArgumentException("原密码错误");
+        }
+        // 加密新密码并更新
+        User updateUser = new User();
+        updateUser.setId(id);
+        updateUser.setPassword(Md5Util.getMD5String(dto.getNewPwd()));
+        updateById(updateUser);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.southwind.exception;
 
 import com.southwind.pojo.Result;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -19,5 +20,21 @@ public class GlobalExceptionHandler {
                 .findFirst()
                 .orElse("参数校验失败");
         return Result.error(message);
+    }
+
+    //处理@Validated校验方法参数（如@RequestParam）失败异常
+    @ExceptionHandler(ConstraintViolationException.class)
+    public Result handleConstraintViolation(ConstraintViolationException e) {
+        String message = e.getConstraintViolations().stream()
+                .map(v -> v.getMessage())
+                .findFirst()
+                .orElse("参数校验失败");
+        return Result.error(message);
+    }
+
+    //处理业务校验失败异常（如原密码错误、两次新密码不一致）
+    @ExceptionHandler(IllegalArgumentException.class)
+    public Result handleIllegalArgument(IllegalArgumentException e) {
+        return Result.error(e.getMessage());
     }
 }

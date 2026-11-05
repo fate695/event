@@ -3,6 +3,8 @@ package com.southwind.pojo;
 import com.baomidou.mybatisplus.annotation.*;
 
 import java.util.Date;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 /**
@@ -26,6 +28,7 @@ public class User {
     /**
      * 密码
      */
+    @JsonIgnore // 序列化时忽略该字段
     private String password;
 
     /**

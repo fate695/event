@@ -2,16 +2,24 @@ package com.southwind.controller;
 
 import com.southwind.pojo.Result;
 import com.southwind.pojo.User;
+import com.southwind.pojo.dto.PasswordUpdateDTO;
 import com.southwind.pojo.dto.UserRegisterDTO;
+import com.southwind.pojo.dto.UserUpdateDTO;
 import com.southwind.service.UserService;
+import com.southwind.utils.JwtUtil;
 import com.southwind.utils.Md5Util;
+import com.southwind.utils.ThreadLocalUtil;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.hibernate.validator.constraints.URL;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/user")
+@Validated
 public class UserController {
 
     private final UserService userService;
@@ -42,6 +50,43 @@ public class UserController {
         if (user == null || !Md5Util.checkPassword(dto.getPassword(), user.getPassword())) {
             return Result.error("用户名或密码错误");
         }
-        return Result.success("令牌获取");
+        //登录成功，生成并下发JWT令牌
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("id", user.getId());
+        claims.put("username", user.getUsername());
+        String token = JwtUtil.genToken(claims);
+        return Result.success(token);
     }
+
+    //获取用户详细信息
+    @GetMapping("/userInfo")
+    public Result<User> userInfo(){
+        //通过令牌解析用户数据
+        Map<String, Object> claims = ThreadLocalUtil.get();
+        Integer id = (Integer) claims.get("id");
+        User user = userService.getById(id);
+        return Result.success(user);
+    }
+
+    //更新用户信息
+    @PutMapping("/update")
+    public Result update(@Valid @RequestBody UserUpdateDTO dto){
+        userService.updateById(dto.toUser());
+        return Result.success();
+    }
+
+    //更新用户头像
+    @PatchMapping("/updateAvatar")
+    public Result updateAvatar(@RequestParam @URL String avatarUrl){
+        userService.updateAvatar(avatarUrl);
+        return Result.success();
+    }
+
+    //更新用户密码
+    @PatchMapping("/updatePwd")
+    public Result updatePwd(@Valid @RequestBody PasswordUpdateDTO dto){
+        userService.updatePwd(dto);
+        return Result.success();
+    }
+
 }

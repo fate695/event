@@ -2,6 +2,7 @@ package com.southwind.service;
 
 import com.southwind.pojo.User;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.southwind.pojo.dto.PasswordUpdateDTO;
 import com.southwind.pojo.dto.UserRegisterDTO;
 
 /**
@@ -16,6 +17,8 @@ public interface UserService extends IService<User> {
     User findUserByUserName(String username);
     //注册用户
     void register(String username, String password);
-
-
+    //更新用户头像
+    void updateAvatar(String avatarUrl);
+    //更新用户密码
+    void updatePwd(PasswordUpdateDTO dto);
 }
