@@ -9,6 +9,7 @@ import com.southwind.service.UserService;
 import com.southwind.mapper.UserMapper;
 import com.southwind.utils.Md5Util;
 import com.southwind.utils.ThreadLocalUtil;
+import com.southwind.utils.TokenUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -61,8 +62,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             throw new IllegalArgumentException("两次输入的新密码不一致");
         }
         // 从令牌中获取当前登录用户 id，并查询用户
-        Map<String, Object> claims = ThreadLocalUtil.get();
-        Integer id = (Integer) claims.get("id");
+        Integer id = TokenUtils.getUserId();
         User user = getById(id);
         // 校验原密码是否正确
         if (user == null || !Md5Util.checkPassword(dto.getOldPwd(), user.getPassword())) {
